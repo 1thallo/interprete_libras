@@ -1,16 +1,15 @@
-# Python
+venv/
+.venv/
+env/
+ENV/
+pyvenv.cfg
+
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 
-# Virtual env
-.venv/
-venv/
+.env
 
-# Build
-build/
-dist/
-*.egg-info/
-
-# IDE
 .vscode/
 .idea/
