@@ -45,7 +45,7 @@ class DetectorLibras:
             exit()
 
     def inicializar_camera(self):
-        self.cap = cv2.VideoCapture(0)
+        self.cap = cv2.VideoCapture(1, cv2.CAP_V4L2)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
         self.cap.set(cv2.CAP_PROP_FPS, 30)
@@ -59,7 +59,7 @@ class DetectorLibras:
             options = vision.HandLandmarkerOptions(
                 base_options=base_options,
                 running_mode=vision.RunningMode.IMAGE,
-                num_hands=1,
+                num_hands=2,
                 min_hand_detection_confidence=0.3
             )
             self.detector = vision.HandLandmarker.create_from_options(options)
@@ -71,24 +71,46 @@ class DetectorLibras:
     def processar_frame(self, frame):
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame_rgb)
+
         detection_result = self.detector.detect(mp_image)
-        
+
         if detection_result.hand_landmarks:
+
             if not self.mao_detectada:
                 self.buffer_frames.clear()
-            
+
             self.mao_detectada = True
-            self.ultimos_landmarks = detection_result.hand_landmarks[0]
-            
-            landmarks = []
-            for lm in self.ultimos_landmarks:
-                landmarks.extend([lm.x, lm.y, lm.z])
-            
+
+            # Guarda os landmarks reais para desenhar
+            self.ultimos_landmarks = detection_result.hand_landmarks
+
+            left = [0] * 63
+            right = [0] * 63
+
+            for hand_landmarks, handedness in zip(
+                    detection_result.hand_landmarks,
+                    detection_result.handedness):
+
+                label = handedness[0].category_name
+
+                coords = []
+
+                for lm in hand_landmarks:
+                    coords.extend([lm.x, lm.y, lm.z])
+
+                if label == "Left":
+                    left = coords
+                else:
+                    right = coords
+
+            # 126 valores (63 esquerda + 63 direita)
+            landmarks = left + right
+
             self.buffer_frames.append(landmarks)
-            
-            # Faz predicao a CADA frame, mesmo com buffer incompleto
-            if len(self.buffer_frames) >= 5:  # Comeca a predizer com apenas 5 frames
+
+            if len(self.buffer_frames) >= 5:
                 self.fazer_predicao_rapida()
+
         else:
             self.mao_detectada = False
             self.ultimos_landmarks = None
@@ -125,28 +147,46 @@ class DetectorLibras:
             self.tempo_mostra = time.time()
 
     def desenhar_landmarks(self, frame):
+
         if self.ultimos_landmarks is None:
             return
-        
+
         h, w = frame.shape[:2]
-        
-        for lm in self.ultimos_landmarks:
-            x, y = int(lm.x * w), int(lm.y * h)
-            cv2.circle(frame, (x, y), 3, (0, 200, 0), -1)
-        
+
         connections = [
-            (0,1), (1,2), (2,3), (3,4), (0,5), (5,6), (6,7), (7,8),
-            (0,9), (9,10), (10,11), (11,12), (0,13), (13,14), (14,15), (15,16),
-            (0,17), (17,18), (18,19), (19,20), (5,9), (9,13), (13,17)
+            (0,1), (1,2), (2,3), (3,4),
+            (0,5), (5,6), (6,7), (7,8),
+            (0,9), (9,10), (10,11), (11,12),
+            (0,13), (13,14), (14,15), (15,16),
+            (0,17), (17,18), (18,19), (19,20),
+            (5,9), (9,13), (13,17)
         ]
-        
-        for idx1, idx2 in connections:
-            if idx1 < len(self.ultimos_landmarks) and idx2 < len(self.ultimos_landmarks):
-                x1 = int(self.ultimos_landmarks[idx1].x * w)
-                y1 = int(self.ultimos_landmarks[idx1].y * h)
-                x2 = int(self.ultimos_landmarks[idx2].x * w)
-                y2 = int(self.ultimos_landmarks[idx2].y * h)
-                cv2.line(frame, (x1, y1), (x2, y2), (255, 100, 0), 1)
+
+        # percorre cada mão detectada
+        for hand_landmarks in self.ultimos_landmarks:
+
+            # desenha os pontos
+            for lm in hand_landmarks:
+                x = int(lm.x * w)
+                y = int(lm.y * h)
+
+                cv2.circle(frame, (x, y), 3, (0, 200, 0), -1)
+
+            # desenha as conexões
+            for idx1, idx2 in connections:
+
+                x1 = int(hand_landmarks[idx1].x * w)
+                y1 = int(hand_landmarks[idx1].y * h)
+
+                x2 = int(hand_landmarks[idx2].x * w)
+                y2 = int(hand_landmarks[idx2].y * h)
+
+                cv2.line(frame,
+                        (x1, y1),
+                        (x2, y2),
+                        (255, 100, 0),
+                        1)
+                
 
     def desenhar_interface(self, frame):
         h, w = frame.shape[:2]

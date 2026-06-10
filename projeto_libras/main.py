@@ -9,7 +9,7 @@ def limpar_tela():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 def mostrar_menu():
-    limpar_tela()
+    #limpar_tela()
     print("=" * 50)
     print("SISTEMA DE RECONHECIMENTO DE LIBRAS")
     print("=" * 50)

@@ -26,7 +26,7 @@ class ColetorLibras:
         self.contador_sequencias = {letra: 0 for letra in self.letras}
         
         # Inicializa webcam
-        self.cap = cv2.VideoCapture(0)
+        self.cap = cv2.VideoCapture(1, cv2.CAP_V4L2)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
         self.cap.set(cv2.CAP_PROP_FPS, 30)
@@ -41,7 +41,7 @@ class ColetorLibras:
             options = vision.HandLandmarkerOptions(
                 base_options=base_options,
                 running_mode=vision.RunningMode.LIVE_STREAM,
-                num_hands=1,
+                num_hands=2,
                 result_callback=self.resultado_mao,
                 min_hand_detection_confidence=0.5,
                 min_hand_presence_confidence=0.5,
@@ -62,28 +62,48 @@ class ColetorLibras:
         # Controle (mantido para compatibilidade)
         self.ultima_coleta = 0
         self.pausa = 0.3
-        
+
+
     def _gerar_colunas(self):
-        """Gera nomes das colunas para o dataset sequencial"""
         colunas = ['letra']
+
         for frame_idx in range(self.sequencia_tamanho):
-            for ponto_idx in range(21):
-                colunas.extend([
-                    f'f{frame_idx}_x{ponto_idx}',
-                    f'f{frame_idx}_y{ponto_idx}',
-                    f'f{frame_idx}_z{ponto_idx}'
-                ])
+
+            for mao in ['left', 'right']:
+
+                for ponto_idx in range(21):
+
+                    colunas.extend([
+                        f'f{frame_idx}_{mao}_x{ponto_idx}',
+                        f'f{frame_idx}_{mao}_y{ponto_idx}',
+                        f'f{frame_idx}_{mao}_z{ponto_idx}'
+                    ])
+
         return colunas
     
     def resultado_mao(self, result, output_image, timestamp_ms):
         """Callback acionado quando o MediaPipe processa um frame"""
-        if result.hand_landmarks and self.gravando:
-            hand = result.hand_landmarks[0]
-            landmarks = []
-            for lm in hand:
-                landmarks.extend([lm.x, lm.y, lm.z])
-            
-            self.sequencia_atual.append(landmarks)
+        left = [0] * 63
+        right = [0] * 63
+
+        for hand_landmarks, handedness in zip(
+                result.hand_landmarks,
+                result.handedness):
+
+            label = handedness[0].category_name
+
+            coords = []
+
+            for lm in hand_landmarks:
+                coords.extend([lm.x, lm.y, lm.z])
+
+            if label == "Left":
+                left = coords
+            else:
+                right = coords
+
+        landmarks = left + right
+        self.sequencia_atual.append(landmarks)
     
     def salvar_sequencia(self):
         """Salva a sequencia completa no dataset"""
@@ -120,7 +140,7 @@ class ColetorLibras:
         os.makedirs('dados', exist_ok=True)
         df = pd.DataFrame(self.dados, columns=self.colunas)
         
-        arquivo = 'dados/dataset_libras.csv'
+        arquivo = 'dados/dataset_libras_2maos.csv'
         if os.path.exists(arquivo):
             df_existente = pd.read_csv(arquivo)
             df = pd.concat([df_existente, df], ignore_index=True)

@@ -24,7 +24,7 @@ class TreinadorLibras:
         if not os.path.exists('resultados'):
             os.makedirs('resultados')
     
-    def carregar_dados(self, arquivo='dados/dataset_libras.csv'):
+    def carregar_dados(self, arquivo = 'dados/dataset_libras_2maos.csv'):
         """Carrega e prepara os dados sequenciais"""
         print("\nCarregando dados...")
         
@@ -39,8 +39,8 @@ class TreinadorLibras:
         # Determina o tamanho da sequencia baseado nas colunas
         colunas = df.columns
         num_colunas_landmarks = len([c for c in colunas if 'x' in c or 'y' in c or 'z' in c])
-        self.sequencia_tamanho = num_colunas_landmarks // 63  # 21 landmarks * 3 coordenadas
-        self.num_landmarks = 63  # 21 * 3
+        self.sequencia_tamanho = num_colunas_landmarks // 126  # 21 landmarks * 3 coordenadas
+        self.num_landmarks = 126  # 21 * 3
         
         print(f"Sequencias de {self.sequencia_tamanho} frames detectadas")
         
