@@ -45,13 +45,18 @@ class DetectorLibras:
             exit()
 
     def inicializar_camera(self):
-        self.cap = cv2.VideoCapture(1, cv2.CAP_V4L2)
-        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-        self.cap.set(cv2.CAP_PROP_FPS, 30)
-        if not self.cap.isOpened():
-            print("Camera nao encontrada")
-            exit()
+        for indice in [0, 1, 2]:
+            cap = cv2.VideoCapture(indice, cv2.CAP_DSHOW)
+            if cap.isOpened():
+                self.cap = cap
+                self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+                self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+                self.cap.set(cv2.CAP_PROP_FPS, 30)
+                print(f"Camera aberta no indice {indice}")
+                return
+
+        print("Camera nao encontrada")
+        exit()
 
     def inicializar_detector(self):
         try:

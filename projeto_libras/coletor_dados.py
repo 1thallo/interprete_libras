@@ -41,10 +41,7 @@ class ColetorLibras:
         self.contador_sequencias = {letra: 0 for letra in self.letras}
         
         # Inicializa webcam
-        self.cap = cv2.VideoCapture(1, cv2.CAP_V4L2)
-        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-        self.cap.set(cv2.CAP_PROP_FPS, 30)
+        self.cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
         
         if not self.cap.isOpened():
             print("ERRO: Webcam nao encontrada!")

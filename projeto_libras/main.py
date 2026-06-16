@@ -22,7 +22,11 @@ def mostrar_menu():
 
 def executar_script(script_nome):
     try:
-        subprocess.run([sys.executable, script_nome])
+        pasta_atual = os.path.dirname(os.path.abspath(__file__))
+        caminho_script = os.path.join(pasta_atual, script_nome)
+
+        subprocess.run([sys.executable, caminho_script])
+
     except Exception as e:
         print(f"Erro ao executar {script_nome}: {e}")
         input("\nPressione Enter para continuar...")
