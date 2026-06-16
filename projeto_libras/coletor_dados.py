@@ -15,9 +15,24 @@ from mediapipe.tasks.python import vision
 
 class ColetorLibras:
     def __init__(self):
-        self.letras = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 
-                      'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
-        self.letra_atual = 'A'
+        self.letras = [
+            'OI',
+            'TUDO_BEM',
+            'OBRIGADO',
+            'POR_FAVOR',
+            'EU',
+            'VOCE',
+            'NOS',
+            'GOSTAR',
+            'QUERER',
+            'COMER',
+            'BEBER',
+            'AGUA',
+            'CAFE',
+            'CASA',
+            'ESCOLA',
+            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
+        self.letra_atual = self.letras[0]
         
         # Configuracoes para captura de sequencias
         self.sequencia_tamanho = 20  # 20 frames por sequencia
@@ -292,8 +307,11 @@ class ColetorLibras:
             x_mapa = frame.shape[1] - 300
             for i, letra in enumerate(self.letras[inicio:fim]):
                 cor = (255, 255, 0) if letra == self.letra_atual else (200, 200, 200)
-                cv2.putText(frame, letra, (x_mapa + i*35, y_mapa),
-                           cv2.FONT_HERSHEY_SIMPLEX, 1, cor, 2)
+
+                cv2.putText(frame, letra,
+                        (x_mapa, y_mapa + i*25),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.6, cor, 2)
                 if self.contador_sequencias[letra] > 0:
                     cv2.putText(frame, str(self.contador_sequencias[letra]), 
                                (x_mapa + i*35, y_mapa + 25),

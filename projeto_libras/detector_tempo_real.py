@@ -205,12 +205,40 @@ class DetectorLibras:
         
         # Letra grande
         if self.letra_mostrada != "?" and time.time() - self.tempo_mostra < 1.5:
-            letra = self.letra_mostrada
-            tamanho = cv2.getTextSize(letra, cv2.FONT_HERSHEY_SIMPLEX, 5, 5)[0]
+            texto = self.letra_mostrada
+
+            if len(texto) <= 2:
+                escala = 5
+                espessura = 5
+            elif len(texto) <= 5:
+                escala = 3
+                espessura = 4
+            elif len(texto) <= 10:
+                escala = 2
+                espessura = 3
+            else:
+                escala = 1.5
+                espessura = 2
+
+            tamanho = cv2.getTextSize(
+                texto,
+                cv2.FONT_HERSHEY_SIMPLEX,
+                escala,
+                espessura
+            )[0]
+
             x = (w - tamanho[0]) // 2
             y = (h + tamanho[1]) // 2 - 50
-            
-            cv2.putText(frame, letra, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 5, (0, 255, 255), 5)
+
+            cv2.putText(
+                frame,
+                texto,
+                (x, y),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                escala,
+                (0, 255, 255),
+                espessura
+            )
             
             # Barra de confianca
             barra_x, barra_y = x, y + 40
